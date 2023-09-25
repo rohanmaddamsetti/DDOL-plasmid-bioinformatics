@@ -128,4 +128,4 @@ the goal of this project is to identify metabolic pathways distributed via HGT i
     b. Check transmissibility of plasmids (using a tool like MOB-typer)
 3. Map genes to KEGG nodes (this is the potentially difficult/novel step)
 4. Search for patterns, such as pathways that tend to be mobilized, or other comparisons between genes on mobilized plasmids vs. non-mobilized plasmids vs. chromosomes (these patterns are the potentially novel results)
-If you could search through your codebase to see what you have that is relevant to steps 1 and 2, that would be great. I will learn about MOB-typer for step 2b and start thinking about how we can achieve step 3. Thank you very much for your help!# DDOL-plasmid-bioinformatics
+

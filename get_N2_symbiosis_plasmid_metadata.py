@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 
-""" get_N2_symbiosis_and_T3SS_plasmid_metadata.py by Rohan Maddamsetti. """
+""" get_N2_symbiosis_plasmid_metadata.py by Rohan Maddamsetti. """
 
 import csv
 
-# Read the list of plasmids that contain Nif/Fix, Nod, or T3SS proteins.
-with open('../results/plasmids_with_N2_symbiosis_or_T3SS_genes.txt', 'r') as id_file:
+# Read the list of plasmids that contain Nif/Fix, Nod, or  Nol/Nop proteins.
+with open('../results/plasmids_with_N2_symbiosis_genes.txt', 'r') as id_file:
     id_list = set(line.strip().replace("NC_", "").replace("NZ_", "") for line in id_file)
 
 # Create an empty list to store the filtered rows
@@ -19,7 +19,7 @@ with open('../results/chromosome-plasmid-table.csv', 'r') as csv_file:
             filtered_rows.append(row)
 
 # Write the filtered rows to a new CSV file
-with open('../results/plasmids_with_N2_symbiosis_or_T3SS_genes_metadata.csv', 'w', newline='') as output_file:
+with open('../results/plasmids_with_N2_symbiosis_metadata.csv', 'w', newline='') as output_file:
     fieldnames = ['Organism', 'Strain', 'NCBI_Nucleotide_Accession', 'SequenceType', 'Annotation_Accession']
     csv_writer = csv.DictWriter(output_file, fieldnames=fieldnames)
     csv_writer.writeheader()

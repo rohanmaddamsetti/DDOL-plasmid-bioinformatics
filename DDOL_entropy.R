@@ -24,13 +24,13 @@ entropy.data <- read.csv("../results/entropy_data.csv")
 ## Get the count of genes in each pathway on each plasmid.
 NifFix.pathway.count.df <- read.csv("../results/NifFixPlasmidCount.csv")
 Nod.pathway.count.df <- read.csv("../results/NodPlasmidCount.csv")
-T3SS.pathway.count.df <- read.csv("../results/T3SSPlasmidCount.csv")
+NolNop.pathway.count.df <- read.csv("../results/NolNopPlasmidCount.csv")
 All.symbiosis.pathways.count.df <- read.csv("../results/AllPathwaysPlasmidCount.csv")
 
 ## and merge into a big dataframe for analysis.
 pathway.plasmid.count.df <- NifFix.pathway.count.df %>%
     full_join(Nod.pathway.count.df) %>%
-    full_join(T3SS.pathway.count.df) %>%
+    full_join(NolNop.pathway.count.df) %>%
     full_join(All.symbiosis.pathways.count.df) %>%
     ## add plasmid metadata.
     left_join(plasmid.metadata)
@@ -125,21 +125,17 @@ stacked.pathway.mobility.plot
 ggsave("../results/DDOL-pathway-mobility.pdf", stacked.pathway.mobility.plot, width=8, height = 11)
 
 
-
-
 entropy.rank.data <- entropy.data %>%
   group_by(PathwayType) %>%
     mutate(EntropyRank = rank(desc(Entropy), ties.method = "first")) %>%
     ## join the genome ranking data.
     left_join(genome.all.pathways.ranking)
 
-
 entropy.plot <- entropy.rank.data %>%
     ggplot(aes(x=EntropyRank, y=Entropy, color=PathwayType)) + 
   geom_point(size=1, alpha =.75) + facet_grid(PathwayType~.) +
   theme_classic() + guides(color="none")
 ggsave("../results/DDOL-entropy.pdf", entropy.plot, width=8, height = 11)
-
 
 entropy.of.ranked.genomes.plot <- entropy.rank.data %>%
     ggplot(aes(x = GenomeRank, y=Entropy)) +
