@@ -6,8 +6,6 @@
 ## involved in nitrogen fixation in Rhizobia bacteria that
 ## are found in SynICE MGEs, reported in Weisberg et al. (2022)
 ## in MBio: "Pangenome Evolution Reconciles Robustness and Instability of Rhizobial Symbiosis"
-## I also added the nolXWBTUV cultivar-specificity locus based on Deakin and Broughton (2009)
-## "Symbiotic use of pathogenic strategies: rhizobial protein secretion systems" in Nat. Rev. Micro.
 
 ## Usage: ./rhizobial-symbiosis-plasmid-protein-grep.sh
 
@@ -16,10 +14,9 @@
 
 cat ../results/plasmid-protein-db.faa | grep -A 1 -E "Fix[ABCRIXUS]|Nif[ABDEHKNQSWXZ]" | grep -v '^--$' > ../results/nif_fix_plasmid_proteins.faa
 cat ../results/plasmid-protein-db.faa | grep -A 1 -E "Nod[ABCSUIJDFMNYZVW]|Noe[DIL]|Nol[AKMNOYZ]" | grep -v '^--$' > ../results/nod_plasmid_proteins.faa
-cat ../results/plasmid-protein-db.faa | grep -A 1 -E "Nol[BUVXWT]|Nop[ABDELMPTXYZ]" | grep -v '^--$' > ../results/nol_nop_plasmid_proteins.faa
 
-## Now, get all unique plasmid SeqIDs matched in these three files.
-cat ../results/nif_fix_plasmid_proteins.faa ../results/nod_plasmid_proteins.faa ../results/nol_nop_plasmid_proteins.faa | sed -nr 's/.*SeqID=([^|]*)\|.*/\1/p' | sort | uniq > ../results/plasmids_with_N2_symbiosis_genes.txt
+## Now, get all unique plasmid SeqIDs matched in these two files.
+cat ../results/nif_fix_plasmid_proteins.faa ../results/nod_plasmid_proteins.faa | sed -nr 's/.*SeqID=([^|]*)\|.*/\1/p' | sort | uniq > ../results/plasmids_with_N2_symbiosis_genes.txt
 
 ## Now get the genomic metadata for these plasmids.
 python get_N2_symbiosis_plasmid_metadata.py

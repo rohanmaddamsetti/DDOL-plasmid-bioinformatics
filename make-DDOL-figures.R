@@ -33,7 +33,7 @@ replicon.annotation.data <- read.csv("../results/chromosome-plasmid-table.csv") 
     mutate(Genus = stringr::word(Organism, 1))
 
 
-plasmid.length.data <- read.csv("../results/replicon-lengths-and-protein-counts.csv") %>%
+plasmid.metadata <- read.csv("../results/replicon-lengths-and-protein-counts.csv") %>%
     filter(SeqType == "plasmid")
 
 ## IMPORTANT: This is a tsv file, because "," is a meaningful character in chemical names!   
@@ -49,7 +49,7 @@ plasmid.annotation.data <- replicon.annotation.data %>%
     filter(SeqType == "plasmid")
 
 ## make the dataframe for the plot of metabolic genes on plasmids.
-metabolic.gene.plot.data <- plasmid.length.data %>%
+metabolic.gene.plot.data <- plasmid.metadata %>%
     left_join(metabolic.genes.per.plasmid) %>%
     ## make the dataframe compatible with plasmid.annotation.data
     mutate(NCBI_Nucleotide_Accession = str_remove(SeqID, "N(C|Z)_")) %>%
@@ -157,3 +157,4 @@ wilcox.test(
     alternative="greater")
             
   
+############################################################

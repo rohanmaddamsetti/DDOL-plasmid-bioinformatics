@@ -1,7 +1,6 @@
 ## DDOL_entropy.R by Maggie Wilson and Rohan Maddamsetti.
 library(tidyverse)
 
-
 ## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
 ## showing all plasmids (gray out the ones without symbiosis genes.)
 
@@ -19,44 +18,35 @@ plasmid.metadata <- read.csv("../results/replicon-lengths-and-protein-counts.csv
     left_join(plasmid.mobility.data)
 
 
-## get the plasmid distribution entropy calculation results.
-entropy.data <- read.csv("../results/entropy_data.csv")
-
 ## Get the count of genes in each pathway on each plasmid.
 NifFix.pathway.count.df <- read.csv("../results/NifFixPlasmidCount.csv")
 Nod.pathway.count.df <- read.csv("../results/NodPlasmidCount.csv")
-NolNop.pathway.count.df <- read.csv("../results/NolNopPlasmidCount.csv")
 All.symbiosis.pathways.count.df <- read.csv("../results/AllPathwaysPlasmidCount.csv")
 
 ## and merge into a big dataframe for analysis.
 pathway.plasmid.count.df <- NifFix.pathway.count.df %>%
     full_join(Nod.pathway.count.df) %>%
-    full_join(NolNop.pathway.count.df) %>%
     full_join(All.symbiosis.pathways.count.df) %>%
     ## add plasmid metadata.
-    left_join(plasmid.metadata)
+    left_join(plasmid.metadata) %>%
+    ## pivot wider to multiply the number of genes in Nif/Fix with the number of genes in Nod.
+    ## We define Symbiosis Plasmids as plasmids with BOTH Nif/Fix and Nod genes,
+    ## so this multiplication serves as an AND gate.
+    pivot_wider(names_from = PathwayType, values_from = PathwayGeneCount) %>%
+    ## Now define the SymbiosisPlasmid column.
+    mutate(SymbiosisPlasmid = ifelse(`Nif/Fix` * Nod > 0, TRUE, FALSE)) %>%
+    ## now pivot longer to get back to the original shape of these data.
+    pivot_longer(cols = c("Nif/Fix", "Nod", "All Symbiosis Pathways"),
+                 names_to = "PathwayType", values_to = "PathwayGeneCount")
+                 
 
-
-## plot PathwayGeneCount versus Predicted Mobility
-mobility.plot1 <- pathway.plasmid.count.df %>%
-    ## only plot plasmids with symbiosis genes
-    filter(PathwayGeneCount > 0) %>%
-    ggplot(aes(x = PredictedMobility, y = PathwayGeneCount)) +
-    facet_grid(.~PathwayType) +
-    geom_boxplot() +
-    theme_classic()
-
-mobility.plot1
-
-## plot distribution of mobilities for plasmids with and without symbiosis genes
-mobility.plot2 <- pathway.plasmid.count.df %>%
-    mutate(SymbiosisPlasmid = ifelse(PathwayGeneCount > 0, TRUE, FALSE)) %>%
-    ggplot(aes(x = PredictedMobility)) +
-    facet_grid(PathwayType~SymbiosisPlasmid) +
+mobility.plot <- pathway.plasmid.count.df %>%
+    ggplot(aes(x=SymbiosisPlasmid, fill=PredictedMobility)) +
     geom_bar() +
     theme_classic()
 
-mobility.plot2
+mobility.plot
+
 
 
 
@@ -125,6 +115,9 @@ stacked.pathway.mobility.plot <- pathway.plasmid.count.plot.df %>%
 stacked.pathway.mobility.plot
 ggsave("../results/DDOL-pathway-mobility.pdf", stacked.pathway.mobility.plot, width=8, height = 11)
 
+
+## get the plasmid distribution entropy calculation results.
+entropy.data <- read.csv("../results/entropy_data.csv")
 
 entropy.rank.data <- entropy.data %>%
   group_by(PathwayType) %>%

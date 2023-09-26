@@ -145,7 +145,7 @@ def write_entropy_dict(combined_entropy_dict, outfile="../results/entropy_data.c
 
 
 def print_pathway_gene_count_dict(genome_to_plasmid_pathway_dict, pathwaytype):
-    assert pathwaytype in ["Nif/Fix", "Nod", "Nol/Nop", "All Symbiosis Pathways"]
+    assert pathwaytype in ["Nif/Fix", "Nod", "All Symbiosis Pathways"]
     for genome, plasmid_dict in genome_to_plasmid_pathway_dict.items():
         total_pathway_gene_count = sum(plasmid_dict.values())
         ## print out interesting genomes
@@ -154,7 +154,7 @@ def print_pathway_gene_count_dict(genome_to_plasmid_pathway_dict, pathwaytype):
 
                 
 def write_pathway_gene_count_dict_to_csv(genome_to_plasmid_pathway_dict, outfile, pathwaytype):
-    assert pathwaytype in ["Nif/Fix", "Nod", "Nol/Nop", "All Symbiosis Pathways"]
+    assert pathwaytype in ["Nif/Fix", "Nod", "All Symbiosis Pathways"]
     with open(outfile, "w") as outfh:
         print("Annotation_Accession,Plasmid,PathwayType,PathwayGeneCount", file=outfh)
         for genome, plasmid_dict in genome_to_plasmid_pathway_dict.items():
@@ -172,10 +172,7 @@ def main():
     Nod_plasmid_file = "../results/nod_plasmid_proteins.faa"
     plasmid_nod_count_list = count_plasmids_containing_pathway_genes(Nod_plasmid_file)
 
-    NolNop_plasmid_file = "../results/nol_nop_plasmid_proteins.faa"
-    plasmid_nol_count_list = count_plasmids_containing_pathway_genes(NolNop_plasmid_file)
-
-    combined_pathway_count_list = plasmid_nif_count_list + plasmid_nod_count_list + plasmid_nol_count_list
+    combined_pathway_count_list = plasmid_nif_count_list + plasmid_nod_count_list
 
     ## get a sorted list of the genomes (Annotation Accessions).
     candidate_genome_list = get_genome_accessions()
@@ -183,7 +180,7 @@ def main():
     ## make a dictionary of plasmid ID to genome ID (Annotation Accession)
     plasmid_to_genome_dict = make_plasmid_to_genome_dict(candidate_genome_list)
 
-    ## For each pathway in [Nod, Nif/Fix, Nol/Nop]:
+    ## For each pathway in [Nod, Nif/Fix]:
     #	Make a dict of dicts with the following structure:
     #	genome_to_plasmid_NodPathway_dict = { genomeID: {plasmidID1: 0, plasmidID2 : 0   … , plasmidID7 : 0} }
 
@@ -194,24 +191,18 @@ def main():
     genome_to_plasmid_Nod_Pathway_dict = make_genome_to_plasmid_Pathway_dict(candidate_genome_list,
                                                                              plasmid_to_genome_dict, plasmid_nod_count_list)
 
-    genome_to_plasmid_NolNop_Pathway_dict = make_genome_to_plasmid_Pathway_dict(candidate_genome_list,
-                                                                              plasmid_to_genome_dict, plasmid_nol_count_list)
-
     genome_to_plasmid_all_Pathways_dict = make_genome_to_plasmid_Pathway_dict(candidate_genome_list,
                                                                               plasmid_to_genome_dict, combined_pathway_count_list)
 
     ## write these dictionaries into csv files.
     write_pathway_gene_count_dict_to_csv(genome_to_plasmid_NifFix_Pathway_dict, "../results/NifFixPlasmidCount.csv", "Nif/Fix")
     write_pathway_gene_count_dict_to_csv(genome_to_plasmid_Nod_Pathway_dict, "../results/NodPlasmidCount.csv", "Nod")
-    write_pathway_gene_count_dict_to_csv(genome_to_plasmid_NolNop_Pathway_dict, "../results/NolNopPlasmidCount.csv", "Nol/Nop")
     write_pathway_gene_count_dict_to_csv(genome_to_plasmid_all_Pathways_dict, "../results/AllPathwaysPlasmidCount.csv", "All Symbiosis Pathways")
     
     ## print out interesting genomes
     print_pathway_gene_count_dict(genome_to_plasmid_NifFix_Pathway_dict, "Nif/Fix")
     print()
     print_pathway_gene_count_dict(genome_to_plasmid_Nod_Pathway_dict, "Nod")
-    print()
-    print_pathway_gene_count_dict(genome_to_plasmid_NolNop_Pathway_dict, "Nol/Nop")
     print()
     print_pathway_gene_count_dict(genome_to_plasmid_all_Pathways_dict, "All Symbiosis Pathways")
             
@@ -221,15 +212,13 @@ def main():
     ## 	Save the result in a dictionary,  genome_to_pathway_entropy_dict
     NifFix_prob = calculate_plasmid_probabilities(genome_to_plasmid_NifFix_Pathway_dict)
     Nod_prob = calculate_plasmid_probabilities(genome_to_plasmid_Nod_Pathway_dict)
-    NolNop_prob = calculate_plasmid_probabilities(genome_to_plasmid_NolNop_Pathway_dict)
     combined_pathways_prob = calculate_plasmid_probabilities(genome_to_plasmid_all_Pathways_dict)
 
     NifFix_entropy = calculate_entropy(NifFix_prob)
     Nod_entropy = calculate_entropy(Nod_prob)
-    NolNop_entropy = calculate_entropy(NolNop_prob)
     combined_pathways_entropy = calculate_entropy(combined_pathways_prob)
 
-    combined_entropy_dict = {'Nif/Fix':NifFix_entropy, 'Nod':Nod_entropy, 'Nol/Nop':NolNop_entropy, "All Symbiosis Pathways": combined_pathways_entropy}
+    combined_entropy_dict = {'Nif/Fix':NifFix_entropy, 'Nod':Nod_entropy, "All Symbiosis Pathways": combined_pathways_entropy}
 
     write_entropy_dict(combined_entropy_dict)
     return
