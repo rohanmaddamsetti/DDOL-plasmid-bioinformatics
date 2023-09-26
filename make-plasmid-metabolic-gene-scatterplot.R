@@ -118,7 +118,7 @@ plasmid.proteins.in.KEGG.metabolism <- read.table("../results/plasmid-proteins-i
 metabolic.genes.per.plasmid <- plasmid.proteins.in.KEGG.metabolism %>%
     group_by(SeqID, SeqType) %>%
     summarize(metabolic_protein_count = n()) %>%
-    mutate(metabolic_protein_count = replace_na(metabolic_protein_count))
+    mutate(metabolic_protein_count = replace_na(metabolic_protein_count, 0))
 
 
 plasmid.annotation.data <- replicon.annotation.data %>%
@@ -224,7 +224,7 @@ metabolic.gene.log.scatterplot3 <- ggplotRegression(
 ## save the plot.
 ggsave("../results/plasmid-metabolic-gene-log-scatterplot3.pdf", metabolic.gene.log.scatterplot3)
 
-
+## TODO:
 ## calculate the slope of the regression across the different ecological categories.
 ## look at this distribution of slope parameters, and ask whether the slope
 ## use a binned average, so that each range of the data gives equal contribution,

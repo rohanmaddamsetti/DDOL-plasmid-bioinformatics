@@ -1,6 +1,7 @@
 ## DDOL_entropy.R by Maggie Wilson and Rohan Maddamsetti.
 library(tidyverse)
 
+
 ## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
 ## showing all plasmids (gray out the ones without symbiosis genes.)
 
