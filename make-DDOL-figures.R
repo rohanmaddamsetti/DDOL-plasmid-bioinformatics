@@ -2,12 +2,25 @@
 library(tidyverse)
 library(cowplot)
 
+## TODO: Notes from Hye-in.
+
+## 1) Put the box-plot into the supplement.
+## 2) Edits to stacked bar plot of conjugation association.
+## Simplify the comparison to symbiotic plasmids and non-symbiotic plasmids--
+## Exclude the plasmids that have only a Nif/Fix or a Nod gene.
+## Simplify the text and make the bars thinner. 
+
+## 3) On the supplementary figures showing the distribution of Nif/Fix genes on plasmids in genomes:
+##     Add a clear labels for the regions which represent symbiosis plasmids.
+
+##     Also, shrink these graphs for the supplement.
+##
+
 ## ABSOLUTELY CRITICAL TODO!!! transform y-axes in plots as needed, and be mindful of ggplot pitfalls!
 ## ABSOLUTELY CRITICAL TODO!!!!! HANDLE ZEROS APPROPRIATELY!!!!
 
 ## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
 ## showing all plasmids (gray out the ones without symbiosis genes.)
-
 
 ## Figure 6ABCD: nitrogen-fixing bacteria are enriched with metabolic genes on plasmids.
 
@@ -130,7 +143,7 @@ Fig6C <- metabolic.gene.plot.data %>%
 ## Save the plot
 Fig6ABC <- plot_grid(Fig6A, Fig6B, Fig6C, Fig6ABC_legend,
                       labels=c('A', 'B', 'C', ''), ncol=1, rel_heights=c(1,1,1,0.5))
-ggsave("../results/Fig6ABC.pdf", Fig6ABC, width=6, height=8)
+ggsave("../results/Fig6ABC.pdf", Fig6ABC, width=5.5, height=8)
 
 ############################################################
 ## metabolic genes on plasmids are enriched in nitrogen-fixing bacteria:
@@ -139,7 +152,6 @@ ggsave("../results/Fig6ABC.pdf", Fig6ABC, width=6, height=8)
 N2.fixer.metabolic.gene.comparison.plot.data <- metabolic.gene.plot.data %>%
     group_by(Annotation_Accession, NitrogenFixer) %>%
     summarize(total_plasmid_metabolic_proteins = sum(metabolic_protein_count))
-
 
 N2.fixer.comp.data <- N2.fixer.metabolic.gene.comparison.plot.data %>%
     filter(NitrogenFixer=="Nitrogen-fixer")
@@ -164,7 +176,7 @@ wilcox.test(
     y=non.N2.fixer.comp.data$total_plasmid_metabolic_proteins,
     alternative="greater")$p.value
 
-Fig6D <- N2.fixer.metabolic.gene.comparison.plot.data %>%
+metabolic.genes.in.N2.fixer.comparison.plot <- N2.fixer.metabolic.gene.comparison.plot.data %>%
     ggplot(aes(x = total_plasmid_metabolic_proteins, y = NitrogenFixer, alpha=0.5)) +
     geom_jitter(width=0,alpha=0.2, size=0.1) +
     geom_boxplot(size=0.1, outlier.shape = NA) +
@@ -197,23 +209,47 @@ pathway.plasmid.count.df <- NifFix.pathway.count.df %>%
     ## now pivot longer to get back to the original shape of these data.
     pivot_longer(cols = c("Nif/Fix", "Nod", "All Symbiosis Pathways"),
                  names_to = "PathwayType", values_to = "PathwayGeneCount") %>%
-    mutate(PlasmidType = ifelse(SymbiosisPlasmid, "Symbiosis plasmids with both\nNod and Nif/Fix genes", "all other plasmids in bacteria\nwith Nod or Nif/Fix genes on plasmids")) %>%
-    mutate(PlasmidType = factor(PlasmidType, levels=c( "Symbiosis plasmids with both\nNod and Nif/Fix genes", "all other plasmids in bacteria\nwith Nod or Nif/Fix genes on plasmids"))) %>%
+    mutate(PlasmidType = ifelse(SymbiosisPlasmid, "Symbiosis plasmids", "all other plasmids")) %>%
+    mutate(PlasmidType = factor(PlasmidType, levels=c( "Symbiosis plasmids", "all other plasmids"))) %>%
     rename(Mobility = PredictedMobility)
 
-## Figure 6E.
-Fig6E <- pathway.plasmid.count.df %>%
+## Figure 6D, stacked bar.
+Fig6D.stacked.bar <- pathway.plasmid.count.df %>%
     ggplot(aes(x=PlasmidType, fill=Mobility)) +
     scale_fill_viridis_d(direction=-1) +
     geom_bar() +
     theme_classic() +
     theme(legend.position="bottom") +
     xlab("") +
-    ggtitle("Nif/Fix and Nod pathways are\njointly encoded on conjugative plasmids")
-ggsave("../results/Fig6E.pdf", Fig6E, width=8, height=3.5)
+    ggtitle("Conjugative symbiosis plasmids encode Nif/Fix\nand Nod pathways in nitrogen-fixing bacteria")
+ggsave("../results/stacked-bar-Fig6D.pdf", Fig6D.stacked.bar, width=5, height=5)
 
-Fig6DE <- plot_grid(Fig6D, Fig6E, labels=c('D', 'E'), ncol=1)
-ggsave("../results/Fig6DE.pdf", Fig6DE, width=7, height=5)
+## make a pie chart version of Figure 6D.
+# Calculate the percentage of each Mobility category
+percentage.data <- pathway.plasmid.count.df %>%
+  group_by(PlasmidType, Mobility) %>%
+  summarise(Count = n()) %>%
+  group_by(PlasmidType) %>%
+  mutate(Percentage = (Count / sum(Count)) * 100)
+## save to file.
+write.csv(percentage.data, "../results/Fig6D-pie-chart-data.csv", row.names=FALSE, quote=FALSE)
+
+# Create the pie chart for Fig 6D.
+##Fig6D_pie_chart <- ggplot(percentage.data, aes(x = "", y = Percentage, fill = Mobility)) +
+Fig6D_pie_chart <- ggplot(percentage.data, aes(x = "", y = Percentage, fill = Mobility)) +
+    geom_bar(stat = "identity", width = 1) +
+    coord_polar(theta = "y") +
+    scale_fill_viridis_d(direction = -1) +
+    theme_void() +
+    facet_grid(PlasmidType~.) +
+    theme(legend.position = "bottom") +
+    ggtitle("Conjugative symbiosis plasmids\nencode Nif/Fix and Nod pathways\nin nitrogen-fixing bacteria")
+
+ggsave("../results/Fig6D-pie-chart.pdf", Fig6D_pie_chart, width=5, height=5)
+
+
+Fig6ABCD <- plot_grid(Fig6ABC, Fig6D_pie_chart, labels=c('', 'D'), ncol=2, rel_widths=c(1,1))
+ggsave("../results/Fig6ABCD.pdf", Fig6ABCD, width=10, height=10)
 
 ## calculate statistics for association of symbiosis plasmids with conjugation.
 symbiosis.plasmid.data <- pathway.plasmid.count.df %>%
@@ -226,6 +262,16 @@ symbiosis.plasmid.count <- symbiosis.plasmid.data %>%
 ## 372 Symbiosis plasmids are conjugative.
 conjugative.symbiosis.plasmid.count <- symbiosis.plasmid.data %>%
     filter(Mobility == "conjugative") %>%
+    nrow()
+
+## 24 are mobilizable.
+mobilizable.symbiosis.plasmid.count <- symbiosis.plasmid.data %>%
+    filter(Mobility == "mobilizable") %>%
+    nrow()
+
+## 48 are non-mobilizable.
+non.mobilizable.symbiosis.plasmid.count <- symbiosis.plasmid.data %>%
+    filter(Mobility == "non-mobilizable") %>%
     nrow()
 
 non.symbiosis.plasmid.data <- pathway.plasmid.count.df %>%
