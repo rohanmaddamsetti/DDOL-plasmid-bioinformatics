@@ -5,18 +5,12 @@ library(cowplot)
 ## TODO: Notes from Hye-in.
 
 ## 1) Put the box-plot into the supplement.
-## 2) Edits to stacked bar plot of conjugation association.
-## Simplify the comparison to symbiotic plasmids and non-symbiotic plasmids--
-## Exclude the plasmids that have only a Nif/Fix or a Nod gene.
-## Simplify the text and make the bars thinner. 
 
-## 3) On the supplementary figures showing the distribution of Nif/Fix genes on plasmids in genomes:
+## 2) On the supplementary figures showing the distribution of Nif/Fix genes on plasmids in genomes:
 ##     Add a clear labels for the regions which represent symbiosis plasmids.
-
 ##     Also, shrink these graphs for the supplement.
-##
 
-## ABSOLUTELY CRITICAL TODO!!! transform y-axes in plots as needed, and be mindful of ggplot pitfalls!
+
 ## ABSOLUTELY CRITICAL TODO!!!!! HANDLE ZEROS APPROPRIATELY!!!!
 
 ## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
