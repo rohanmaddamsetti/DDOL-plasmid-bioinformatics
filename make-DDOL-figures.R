@@ -2,19 +2,7 @@
 library(tidyverse)
 library(cowplot)
 
-## TODO: make the Supplementary Figures.
-
-## IMPORTANT TODO: plot the distribution of all metabolic genes over all plasmids in all genomes.
-
-## TODO: Notes from Hye-in.
-## On the supplementary figures showing the distribution of Nif/Fix genes on plasmids in genomes:
-## Add a clear labels for the regions which represent symbiosis plasmids.
-## Also, shrink these graphs for the supplement.
-
 #### Line 77: CRITICAL TODO!!!! HANDLE NA VALUES IN metabolic_protein_count!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
-## showing all plasmids (gray out the ones without symbiosis genes.)
 
 ################################################################################
 ## Make data structures for the analysis.
@@ -68,12 +56,10 @@ plasmid.annotation.data <- replicon.annotation.data %>%
     filter(SeqType == "plasmid")
 
 ################################################################################
-## Supplementary Figure S1: nitrogen-fixing bacteria are enriched with metabolic genes on plasmids.
-
 #### CRITICAL TODO!!!! HANDLE NA VALUES IN metabolic_protein_count!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 ## make the dataframe for S1 Figure, showing metabolic genes on plasmids.
-metabolic.gene.plot.data <- plasmid.metadata %>%
+metabolic.gene.plasmid.data <- plasmid.metadata %>%
     left_join(metabolic.genes.per.plasmid) %>%
     ## make the dataframe compatible with plasmid.annotation.data
     mutate(NCBI_Nucleotide_Accession = str_remove(SeqID, "N(C|Z)_")) %>%
@@ -90,9 +76,65 @@ metabolic.gene.plot.data <- plasmid.metadata %>%
                "Non-nitrogen-fixer")) %>%
     arrange(desc(metabolic_protein_count))
 
+## rank the genomes by the number of metabolic genes on plasmids.
+genome.ranking.by.plasmid.metabolic.genes <- metabolic.gene.plasmid.data %>%
+    group_by(Annotation_Accession) %>%
+    ## first count the number of metabolic genes found on plasmids in each genome
+    ## IMPORTANT: have to remove NA values (which are actually zeros),
+    ## otherwise the whole sum is NA.
+    summarize(TotalMetabolicGeneCount = sum(metabolic_protein_count, na.rm = TRUE)) %>%
+    ungroup() %>%
+    ## arrange by total number of metabolic genes.
+    arrange(desc(TotalMetabolicGeneCount)) %>%
+    ## rank by total number of metabolic genes.
+    mutate(GenomeRank = rank(desc(TotalMetabolicGeneCount), ties.method="first")) %>%
+    ungroup()
+
+## rank the plasmids in each genome by length.
+plasmid.ranking.by.length <- metabolic.gene.plasmid.data %>%
+    ## rank plasmids within each genome by length.  
+    group_by(Annotation_Accession) %>%
+    mutate(PlasmidLengthRank = rank(desc(replicon_length),ties.method="first")) %>%
+    ## turn PlasmidLengthRank into a factor for plotting.
+    mutate(PlasmidLengthRank = as.factor(PlasmidLengthRank)) %>%
+    ## select only the needed columns for nice merging downstream.
+    select(Annotation_Accession, Plasmid, replicon_length, protein_count, PlasmidLengthRank) %>%
+    ungroup()
+
+## rank the plasmids in each genome by number of metabolic genes.
+plasmid.ranking.by.metabolic.genes <- metabolic.gene.plasmid.data %>%
+    ## rank plasmids within each genome by number of metabolic genes.  
+    group_by(Annotation_Accession) %>%
+    mutate(PlasmidMetabolicGeneRank = rank(desc(metabolic_protein_count), ties.method="first")) %>%
+    ## turn PlasmidMetabolicGeneRank into a factor for plotting.
+    mutate(PlasmidMetabolicGeneRank = as.factor(PlasmidMetabolicGeneRank)) %>%
+    ## select only the needed columns for nice merging downstream.
+    select(Annotation_Accession, Plasmid, replicon_length, protein_count, PlasmidMetabolicGeneRank) %>%
+    ungroup()
+
+
+metabolic.gene.plot.data <- metabolic.gene.plasmid.data %>%
+    ## add the genome ranking
+    left_join(genome.ranking.by.plasmid.metabolic.genes) %>%
+    ## and the plasmid rankings
+    left_join(plasmid.ranking.by.metabolic.genes) %>%
+    left_join(plasmid.ranking.by.length) %>%
+    arrange(GenomeRank, PlasmidMetabolicGeneRank)
+
 ## Make the Supplementary File.
 write.csv(metabolic.gene.plot.data, "../results/S1File.csv", row.names=FALSE, quote=FALSE)
 
+## plot the distribution of metabolic genes over plasmids in all of the bacteria.
+metabolic.genes.plasmid.profile.plot <- metabolic.gene.plot.data %>%
+    ggplot(aes(x=GenomeRank, y = metabolic_protein_count, fill=PlasmidMetabolicGeneRank)) +
+    geom_bar(stat="identity") +
+    theme_classic() +
+    theme(legend.position="top")
+ggsave("../results/metabolic-plasmid-profile.pdf", metabolic.genes.plasmid.profile.plot)
+
+
+################################################################################
+## Supplementary Figure S1: nitrogen-fixing bacteria are enriched with metabolic genes on plasmids.
 ## S1Fig: plasmids with lots of metabolic proteins come from Plants and Earth.
 S1FigA <- metabolic.gene.plot.data %>%
     ggplot(aes(x = metabolic_protein_count, fill = Annotation)) +
@@ -315,9 +357,6 @@ print(binom.test(x = 372, n = 444, p = (1086/4371))$p.value)
 ## Supplementary Figure 3. Plots of the distribution of Nif/Fix and Nod genes over the
 ## focus set of 454 genomes.
 
-## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
-## showing all plasmids (gray out the ones without symbiosis genes.)
-
 ## rank the genomes by the number of Nif/Fix and Nod genes found on plasmids.
 genome.Nif.Fix.Nod.ranking <- pathway.plasmid.count.df %>%
     ## rank based on both Nif/Fix and Nod genes
@@ -334,37 +373,6 @@ genome.Nif.Fix.Nod.ranking <- pathway.plasmid.count.df %>%
     ## drop the PathwayType column for nice merging downstream.
     select(-PathwayType) %>%
     ungroup()
-
-## add the genome ranks to pathway.plasmid.count.df for plotting.
-genome.ranked.pathway.plasmid.count.df <- pathway.plasmid.count.df %>%    
-    ## add the genome ranking.
-    left_join(genome.Nif.Fix.Nod.ranking)
-
-
-## Plot the distribution of plasmids across all genomes.
-## rank all plasmids in these 454 genomes by plasmid length.
-all.plasmid.length.ranking <- pathway.plasmid.count.df %>%
-    filter(PathwayType == "All Symbiosis Pathways") %>%
-    group_by(Annotation_Accession) %>%
-    mutate(PlasmidLengthRank = rank(desc(replicon_length), ties.method="first")) %>%
-    ## turn PlasmidLengthRank into a factor for plotting.
-    mutate(PlasmidLengthRank = as.factor(PlasmidLengthRank)) %>%
-    ## for nice merging downstream, we don't want to have the PathwayGeneCount.
-    select(Annotation_Accession, Plasmid, replicon_length, protein_count, PlasmidLengthRank) %>%
-    ungroup()
-
-    
-## plot the length distribution of plasmids in each of the 454 genomes.
-plasmid.length.profile.plot <- genome.ranked.pathway.plasmid.count.df %>%
-    ## rank all plasmids in these genomes by size
-    left_join(all.plasmid.length.ranking) %>%
-    ggplot(aes(x=GenomeRank, y = protein_count, fill=PlasmidLengthRank)) +
-    geom_bar(stat="identity") +
-    theme_classic() +
-    theme(legend.position="top") +
-    facet_grid(PathwayType~.)
-ggsave("../results/DDOL-plasmid-size-profile.pdf", plasmid.length.profile.plot, width=8, height = 6)
-
 
 ## S3 Figure Panels A and B.
 ## Plot the distribution of Nif/Fix and Nod genes over plasmids
@@ -384,8 +392,10 @@ Nif.Fix.Nod.plasmid.length.ranking <- pathway.plasmid.count.df %>%
     select(Annotation_Accession, Plasmid, replicon_length, protein_count, PlasmidLengthRank) %>%
     ungroup()
 
-
-Nif.Fix.Nod.plasmid.count.plot.df <- genome.ranked.pathway.plasmid.count.df %>%
+## add the genome ranks to pathway.plasmid.count.df for plotting.
+Nif.Fix.Nod.plasmid.count.plot.df <- pathway.plasmid.count.df %>%    
+    ## add the genome ranking.
+    left_join(genome.Nif.Fix.Nod.ranking) %>%
     ## IMPORTANT: remove plasmids with no symbiosis genes from the plot
     ## for consistency with symbiosis.plasmid.ranking.
     filter(PathwayGeneCount > 0) %>%
@@ -412,7 +422,6 @@ stacked.pathway.mobility.plot <- Nif.Fix.Nod.plasmid.count.plot.df %>%
     theme(legend.position="top") +
     facet_grid(PathwayType~.)
 ggsave("../results/DDOL-pathway-mobility.pdf", stacked.pathway.mobility.plot, width=8, height = 4)
-
 
 S3Fig <- plot_grid(stacked.pathway.profile.plot, stacked.pathway.mobility.plot,ncol=1, labels = c('A', 'B'))
 ggsave("../results/S3Fig.pdf", S3Fig, width=8)
