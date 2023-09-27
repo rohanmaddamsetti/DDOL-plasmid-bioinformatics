@@ -2,8 +2,9 @@
 library(tidyverse)
 library(cowplot)
 
-
 ## TODO: make the Supplementary Figures.
+
+## IMPORTANT TODO: plot the distribution of all metabolic genes over all plasmids in all genomes.
 
 ## TODO: Notes from Hye-in.
 ## On the supplementary figures showing the distribution of Nif/Fix genes on plasmids in genomes:
@@ -14,7 +15,6 @@ library(cowplot)
 
 ## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
 ## showing all plasmids (gray out the ones without symbiosis genes.)
-
 
 ################################################################################
 ## Make data structures for the analysis.
@@ -68,11 +68,11 @@ plasmid.annotation.data <- replicon.annotation.data %>%
     filter(SeqType == "plasmid")
 
 ################################################################################
-## Figure 6ABC: nitrogen-fixing bacteria are enriched with metabolic genes on plasmids.
+## Supplementary Figure S1: nitrogen-fixing bacteria are enriched with metabolic genes on plasmids.
 
 #### CRITICAL TODO!!!! HANDLE NA VALUES IN metabolic_protein_count!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
-## make the dataframe for Figure 6ABC, showing metabolic genes on plasmids.
+## make the dataframe for S1 Figure, showing metabolic genes on plasmids.
 metabolic.gene.plot.data <- plasmid.metadata %>%
     left_join(metabolic.genes.per.plasmid) %>%
     ## make the dataframe compatible with plasmid.annotation.data
@@ -93,8 +93,8 @@ metabolic.gene.plot.data <- plasmid.metadata %>%
 ## Make the Supplementary File.
 write.csv(metabolic.gene.plot.data, "../results/S1File.csv", row.names=FALSE, quote=FALSE)
 
-## Figure 6ABC: plasmids with lots of metabolic proteins come from Plants and Earth.
-Fig6A <- metabolic.gene.plot.data %>%
+## S1Fig: plasmids with lots of metabolic proteins come from Plants and Earth.
+S1FigA <- metabolic.gene.plot.data %>%
     ggplot(aes(x = metabolic_protein_count, fill = Annotation)) +
     geom_histogram(bins=100) +
     geom_vline(xintercept = 100, color="gray", linetype="dotted") +
@@ -107,11 +107,11 @@ Fig6A <- metabolic.gene.plot.data %>%
     ggtitle("All plasmids with metabolic genes") +
     theme(legend.position="top")
 
-## get the legend and remove from Fig6A.
-Fig6ABC_legend <- get_legend(Fig6A)
-Fig6A <- Fig6A + guides(fill = "none")
+## get the legend and remove from S1FigA.
+S1Fig_legend <- get_legend(S1FigA)
+S1FigA <- S1FigA + guides(fill = "none")
 
-Fig6B <- metabolic.gene.plot.data %>%
+S1FigB <- metabolic.gene.plot.data %>%
     filter(metabolic_protein_count > 100) %>%
     ggplot(aes(x = metabolic_protein_count, fill = Annotation)) +
     geom_histogram(bins=100) +
@@ -126,7 +126,7 @@ Fig6B <- metabolic.gene.plot.data %>%
     ggtitle("Plasmids with > 100 metabolic genes") +
     guides(fill = "none")
 
-Fig6C <- metabolic.gene.plot.data %>%
+S1FigC <- metabolic.gene.plot.data %>%
     filter(NitrogenFixer == "Nitrogen-fixer") %>%
     ggplot(aes(x = metabolic_protein_count, fill = Annotation)) +
     geom_histogram(bins=100) +
@@ -142,9 +142,9 @@ Fig6C <- metabolic.gene.plot.data %>%
     guides(fill = "none")
 
 ## Save the plot
-Fig6ABC <- plot_grid(Fig6A, Fig6B, Fig6C, Fig6ABC_legend,
+S1Fig <- plot_grid(S1FigA, S1FigB, S1FigC, S1Fig_legend,
                       labels=c('A', 'B', 'C', ''), ncol=1, rel_heights=c(1,1,1,0.5))
-ggsave("../results/Fig6ABC.pdf", Fig6ABC, width=5.5, height=8)
+ggsave("../results/S1Fig.pdf", S1Fig, width=5.5, height=8)
 
 ############################################################
 ## metabolic genes on plasmids are enriched in nitrogen-fixing bacteria:
@@ -188,11 +188,11 @@ metabolic.genes.in.N2.fixer.comparison.plot <- N2.fixer.metabolic.gene.compariso
     ggtitle("Plasmids in nitrogen-fixing bacteria are enriched with metabolic genes") +
     theme(plot.title = element_text(size = 10))
 
-## save this boxplot as S1 Supplementary Figure.
-ggsave("../results/S1Figure.pdf", metabolic.genes.in.N2.fixer.comparison.plot, width=6, height=1.75)
+## save this boxplot as S2 Supplementary Figure.
+ggsave("../results/S2Fig.pdf", metabolic.genes.in.N2.fixer.comparison.plot, width=6, height=1.75)
 
 ################################################################################
-## Figure 6D: Nif/Fix and Nod genes are co-located on conjugative symbiosis plasmids.
+## Figure 6A: Nif/Fix and Nod genes are co-located on conjugative symbiosis plasmids.
 
 ## This analysis and figure examines 454 genomes with Nif/Fix or Nod genes found on plasmids.
 ## Get the count of genes in each pathway on each plasmid.
@@ -220,19 +220,19 @@ pathway.plasmid.count.df <- NifFix.pathway.count.df %>%
     rename(Mobility = PredictedMobility)
 
 
-## Figure 6D is a pie-chart.
-Fig6D.pie.chart.data <- pathway.plasmid.count.df %>%
+## Figure 6A is a pie-chart.
+Fig6A.pie.chart.data <- pathway.plasmid.count.df %>%
     group_by(PlasmidType, Mobility) %>%
     summarise(Count = n()) %>%
     group_by(PlasmidType) %>%
     ## Calculate the percentage of each Mobility category
     mutate(Percentage = (Count / sum(Count)) * 100)
 ## save these data to file.
-write.csv(Fig6D.pie.chart.data, "../results/Fig6D-pie-chart-data.csv", row.names=FALSE, quote=FALSE)
+write.csv(Fig6A.pie.chart.data, "../results/Fig6A-pie-chart-data.csv", row.names=FALSE, quote=FALSE)
 
-## Create the pie chart for Fig 6D.
-## Grayson will lay out Figure 6 using Fig6ABC and Fig6D panels by hand.
-Fig6D_pie_chart <- Fig6D.pie.chart.data %>%
+## Create the pie chart for Fig 6A.
+## Grayson will lay out Figure 6 using Fig6A panel by hand.
+Fig6A_pie_chart <- Fig6A.pie.chart.data %>%
     ggplot(aes(x = "", y = Percentage, fill = Mobility)) +
     geom_bar(stat = "identity", width = 1) +
     coord_polar(theta = "y") +
@@ -242,7 +242,7 @@ Fig6D_pie_chart <- Fig6D.pie.chart.data %>%
     theme(legend.position = "bottom") +
     ggtitle("Conjugative symbiosis plasmids\nencode Nif/Fix and Nod pathways\nin nitrogen-fixing bacteria")
 ## save the pie chart
-ggsave("../results/Fig6D-pie-chart.pdf", Fig6D_pie_chart, width=5, height=5)
+ggsave("../results/Fig6A-pie-chart.pdf", Fig6A_pie_chart, width=5, height=5)
 
 ################################################################################
 ## The remaining analysis examines 454 genomes with Nif/Fix or Nod genes found on plasmids.
@@ -311,32 +311,67 @@ non.mobilizable.non.symbiosis.plasmid.count <- non.symbiosis.plasmid.data %>%
 binom.test(x = 372, n = 444, p = (1086/4371))
 print(binom.test(x = 372, n = 444, p = (1086/4371))$p.value)
 
-############################################################
+######################################################################
+## Supplementary Figure 3. Plots of the distribution of Nif/Fix and Nod genes over the
+## focus set of 454 genomes.
 
 ## IMPORTANT TODO: make a plot of plasmid distribution in each genome,
 ## showing all plasmids (gray out the ones without symbiosis genes.)
 
-## count the number of genes found on plasmids in each pathway
-## in each genome.
-    genome.pathway.gene.count <- pathway.plasmid.count.df %>%
-    group_by(Annotation_Accession, PathwayType) %>%
-    summarize(TotalPathwayGeneCount = sum(PathwayGeneCount)) %>%
-    ungroup()
-
-## rank the genomes by the number of genes found on plasmids
-## over all three symbiosis pathways.
-genome.all.pathways.ranking <- genome.pathway.gene.count %>%
+## rank the genomes by the number of Nif/Fix and Nod genes found on plasmids.
+genome.Nif.Fix.Nod.ranking <- pathway.plasmid.count.df %>%
+    ## rank based on both Nif/Fix and Nod genes
     filter(PathwayType == "All Symbiosis Pathways") %>%
+    group_by(Annotation_Accession, PathwayType) %>%
+    ## first count the number of genes found on plasmids in each pathway
+    ## in each genome.
+    summarize(TotalPathwayGeneCount = sum(PathwayGeneCount)) %>%
+    ungroup() %>%
     ## arrange by total number of symbiosis genes.
     arrange(desc(TotalPathwayGeneCount)) %>%
     ## rank by total number of symbiosis genes.
-    mutate(GenomeRank = rank(desc(TotalPathwayGeneCount),ties.method="first")) %>%
+    mutate(GenomeRank = rank(desc(TotalPathwayGeneCount), ties.method="first")) %>%
     ## drop the PathwayType column for nice merging downstream.
     select(-PathwayType) %>%
     ungroup()
 
+## add the genome ranks to pathway.plasmid.count.df for plotting.
+genome.ranked.pathway.plasmid.count.df <- pathway.plasmid.count.df %>%    
+    ## add the genome ranking.
+    left_join(genome.Nif.Fix.Nod.ranking)
+
+
+## Plot the distribution of plasmids across all genomes.
+## rank all plasmids in these 454 genomes by plasmid length.
+all.plasmid.length.ranking <- pathway.plasmid.count.df %>%
+    filter(PathwayType == "All Symbiosis Pathways") %>%
+    group_by(Annotation_Accession) %>%
+    mutate(PlasmidLengthRank = rank(desc(replicon_length), ties.method="first")) %>%
+    ## turn PlasmidLengthRank into a factor for plotting.
+    mutate(PlasmidLengthRank = as.factor(PlasmidLengthRank)) %>%
+    ## for nice merging downstream, we don't want to have the PathwayGeneCount.
+    select(Annotation_Accession, Plasmid, replicon_length, protein_count, PlasmidLengthRank) %>%
+    ungroup()
+
+    
+## plot the length distribution of plasmids in each of the 454 genomes.
+plasmid.length.profile.plot <- genome.ranked.pathway.plasmid.count.df %>%
+    ## rank all plasmids in these genomes by size
+    left_join(all.plasmid.length.ranking) %>%
+    ggplot(aes(x=GenomeRank, y = protein_count, fill=PlasmidLengthRank)) +
+    geom_bar(stat="identity") +
+    theme_classic() +
+    theme(legend.position="top") +
+    facet_grid(PathwayType~.)
+ggsave("../results/DDOL-plasmid-size-profile.pdf", plasmid.length.profile.plot, width=8, height = 6)
+
+
+## S3 Figure Panels A and B.
+## Plot the distribution of Nif/Fix and Nod genes over plasmids
+## and plot the mobility of each of these plasmids.
+
 ## rank the plasmids containing symbiosis genes in each genome by plasmid length.
-symbiosis.plasmid.ranking <- pathway.plasmid.count.df %>%
+Nif.Fix.Nod.plasmid.length.ranking <- pathway.plasmid.count.df %>%
     filter(PathwayType == "All Symbiosis Pathways") %>%
     ## remove plasmids with no symbiosis genes from the ranking.
     filter(PathwayGeneCount > 0) %>%
@@ -348,20 +383,17 @@ symbiosis.plasmid.ranking <- pathway.plasmid.count.df %>%
     ## for nice merging downstream, we don't want to have the PathwayGeneCount.
     select(Annotation_Accession, Plasmid, replicon_length, protein_count, PlasmidLengthRank) %>%
     ungroup()
-  
 
-## add the genome ranks to pathway.plasmid.count.df for plotting.
-pathway.plasmid.count.plot.df <- pathway.plasmid.count.df %>%
-    ## CRITICAL: remove plasmids with no symbiosis genes from the plot
-    ## THIS IS NEEDED FOR CONSISTENCY WITH plasmid.all.pathway.ranking!
+
+Nif.Fix.Nod.plasmid.count.plot.df <- genome.ranked.pathway.plasmid.count.df %>%
+    ## IMPORTANT: remove plasmids with no symbiosis genes from the plot
+    ## for consistency with symbiosis.plasmid.ranking.
     filter(PathwayGeneCount > 0) %>%
-    ## add the genome ranking.
-    left_join(genome.all.pathways.ranking) %>%
     ## add the plasmid ranking.
-    left_join(symbiosis.plasmid.ranking)
+    left_join(Nif.Fix.Nod.plasmid.length.ranking)
 
 
-stacked.pathway.profile.plot <- pathway.plasmid.count.plot.df %>%
+stacked.pathway.profile.plot <- Nif.Fix.Nod.plasmid.count.plot.df %>%
     ## Just show Nif/Fix and Nod.
     filter(PathwayType != "All Symbiosis Pathways") %>%
     ggplot(aes(x=GenomeRank, y = PathwayGeneCount, fill=PlasmidLengthRank)) +
@@ -369,18 +401,18 @@ stacked.pathway.profile.plot <- pathway.plasmid.count.plot.df %>%
     theme_classic() +
     theme(legend.position="top") +
     facet_grid(PathwayType~.)
+ggsave("../results/DDOL-pathway-profile.pdf", stacked.pathway.profile.plot, width=8, height = 4)
 
-stacked.pathway.profile.plot
-ggsave("../results/DDOL-pathway-profile.pdf", stacked.pathway.profile.plot, width=8, height = 11)
-
-stacked.pathway.mobility.plot <- pathway.plasmid.count.plot.df %>%
+stacked.pathway.mobility.plot <- Nif.Fix.Nod.plasmid.count.plot.df %>%
     ## Just show Nif/Fix and Nod.
     filter(PathwayType != "All Symbiosis Pathways") %>%
-    ggplot(aes(x=GenomeRank, y = PathwayGeneCount, fill=PredictedMobility)) +
+    ggplot(aes(x=GenomeRank, y = PathwayGeneCount, fill=Mobility)) +
     geom_bar(stat="identity") +
     theme_classic() +
     theme(legend.position="top") +
     facet_grid(PathwayType~.)
+ggsave("../results/DDOL-pathway-mobility.pdf", stacked.pathway.mobility.plot, width=8, height = 4)
 
-stacked.pathway.mobility.plot
-ggsave("../results/DDOL-pathway-mobility.pdf", stacked.pathway.mobility.plot, width=8, height = 11)
+
+S3Fig <- plot_grid(stacked.pathway.profile.plot, stacked.pathway.mobility.plot,ncol=1, labels = c('A', 'B'))
+ggsave("../results/S3Fig.pdf", S3Fig, width=8)
