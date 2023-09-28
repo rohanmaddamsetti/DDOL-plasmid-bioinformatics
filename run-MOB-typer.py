@@ -1,10 +1,14 @@
 #!/usr/bin/env python
 
 """
-run-MOB-typer.py by Rohan Maddamsetti.
+run-MOB-typer.py by Rohan Maddamsetti and Hye-in Son.
+modified slightly to match local paths by Hye-in.
 
 This script writes out plasmids as FASTA sequences into ../results/plasmid-FASTA-seqs
 to make inputs for MOB-typer (a program in MOB-SUITE).
+
+This script is run on DCC inside of a wrapper shell script as follows:
+sbatch run-MOB-typer.sh
 """
 
 import os
@@ -22,11 +26,12 @@ def run_MOB_typer(FASTA_plasmid_dir, MOB_typer_results_dir):
         print (" ".join(MOB_typer_args))
         subprocess.run(MOB_typer_args)
     return
-    
+
 
 def main():
-    FASTA_plasmid_dir = "../results/plasmid-FASTA-seqs/"
-    MOB_typer_results_dir = "../results/plasmid-MOB-typer-results/"
+#    FASTA_plasmid_dir = "../results/plasmid-FASTA-seqs/"
+    FASTA_plasmid_dir = "../data/plasmid-FASTA-references-copy-1/" #for the first 4200 reads
+    MOB_typer_results_dir = "../results/plasmid-MOB-typer-results-rerun/"
     run_MOB_typer(FASTA_plasmid_dir, MOB_typer_results_dir)
     return
 

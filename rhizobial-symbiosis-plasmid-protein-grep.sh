@@ -28,4 +28,4 @@ Rscript find_N2_symbiosis_plasmid_genomes.R
 ## make input files for DDOL_entropy.R.
 python DDOL.py
 
-## Now I can run the analysis in DDOL_entropy.R.
+## Now I can run the analysis in make-DDOL-figures.R.

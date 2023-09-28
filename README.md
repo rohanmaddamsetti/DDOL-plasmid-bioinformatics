@@ -77,7 +77,7 @@ successful_GhostKOALA_concatenated_ko_results.tsv, which only contains rows that
 successfully mapped to a KEGG KO ID.  
 
 Then run:  
-python remove-chromosomes-from-Ghost_KOALA-results.py > ../results/filtered_successful_GhostKOALA_concatenated_ko_results.tsv
+python remove-chromosomes-from-Ghost_KOALA-results.py > ../results/filtered_successful_GhostKOALA_concatenated_ko_results.tsv  
 python get_unique_KEGG_IDs.py > ../results/unique_plasmid_KEGG_IDs.tsv  
 
 to get the union of all KEGG IDs found among the plasmid genes.  
@@ -99,33 +99,23 @@ but this has a disproportionate effect on examining metabolic genes on plasmids.
 
 To generate a table of all KEGG metabolic genes in the plasmids.  
 
-Then, to make input files for MOB-typer, do the following:  
+We use MOB-SUITE to get important plasmid data on mobility: https://github.com/phac-nml/mob-suite  
+To make input files for MOB-typer, do the following:  
 
 mkdir ../results/plasmid-FASTA-references  
 mkdir ../results/plasmid-MOB-typer-results  
 python write-plasmid-seqs-for-MOB-typer.py  
 
+Then install MOB-SUITE on your local supercomputer (Duke Compute Cluster)  
+and run the python wrapper script run-MOB-typer.py using the following 
+sbatch shell script:  
 
-#### Currents thoughts/ideas about the analysis.
+sbatch run-MOB-typer-1.sh
 
-- Use MOB-SUITE to get important plasmid data on mobility: https://github.com/phac-nml/mob-suite  
+## Data analysis.
 
-MOB-typer needs to have one DNA FASTA file per plasmid.  
+Run the shell script rhizobial-symbiosis-plasmid-protein-grep.sh as follows:
+./rhizobial-symbiosis-plasmid-protein-grep.sh
 
-- Use CLEAN deep learning network from Huimin Zhao lab to annotate EC numbers:
-https://github.com/tttianhao/CLEAN  
-See section: 2.4 Inference on a single FASTA file
-
-
-
-
-#### Project notes from Grayson.
-
-the goal of this project is to identify metabolic pathways distributed via HGT in natural communities, which would indicate that dynamic division of labor (DDOL) is a good move for microbes and microbial consortia harboring complex pathways. This would be compelling evidence that DDOL could be a viable engineering strategy for biomanufacturing as well. To review, our goals are as follows:
-1. Curate/download a plasmid sequence database
-2. Carry out initial analysis of plasmid sequences:
-    a. Annotate or scan annotations of the genes present on the plasmids
-    b. Check transmissibility of plasmids (using a tool like MOB-typer)
-3. Map genes to KEGG nodes (this is the potentially difficult/novel step)
-4. Search for patterns, such as pathways that tend to be mobilized, or other comparisons between genes on mobilized plasmids vs. non-mobilized plasmids vs. chromosomes (these patterns are the potentially novel results)
+Then run the R script "make-DDOL-figures.R" to generate all bioinformatics figures and analyses.  
 
