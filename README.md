@@ -1,4 +1,4 @@
-# DDOL-plasmid-bioinformatics by Rohan Maddamsetti, Maggie Wilson, Hye-in Son, Grayson Hamrick
+# DDOL-plasmid-bioinformatics by Rohan Maddamsetti, Hye-in Son, Maggie Wilson, Grayson Hamrick
 
 Dynamic division of labor in natural communities project led by Grayson.
 
