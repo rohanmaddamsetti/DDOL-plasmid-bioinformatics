@@ -2,8 +2,6 @@
 library(tidyverse)
 library(cowplot)
 
-#### Line 77: CRITICAL TODO!!!! HANDLE NA VALUES IN metabolic_protein_count!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ################################################################################
 ## Make data structures for the analysis.
 ## annotate the genomes and plasmids.
@@ -49,18 +47,18 @@ plasmid.proteins.in.KEGG.metabolism <- read.table("../results/plasmid-proteins-i
 
 metabolic.genes.per.plasmid <- plasmid.proteins.in.KEGG.metabolism %>%
     group_by(SeqID, SeqType) %>%
-    summarize(metabolic_protein_count = n()) %>%
-    mutate(metabolic_protein_count = replace_na(metabolic_protein_count, 0))
+    summarize(metabolic_protein_count = n())
 
 plasmid.annotation.data <- replicon.annotation.data %>%
     filter(SeqType == "plasmid")
 
 ################################################################################
-#### CRITICAL TODO!!!! HANDLE NA VALUES IN metabolic_protein_count!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 ## make the dataframe for S1 Figure, showing metabolic genes on plasmids.
 metabolic.gene.plasmid.data <- plasmid.metadata %>%
     left_join(metabolic.genes.per.plasmid) %>%
+    ## plasmids that aren't in metabolic.genes.per.plasmids
+    ## don't have any metabolic genes. So set these NA values to zero.
+    mutate(metabolic_protein_count = replace_na(metabolic_protein_count, 0)) %>%
     ## make the dataframe compatible with plasmid.annotation.data
     mutate(NCBI_Nucleotide_Accession = str_remove(SeqID, "N(C|Z)_")) %>%
     ## and join.
@@ -112,7 +110,6 @@ plasmid.ranking.by.metabolic.genes <- metabolic.gene.plasmid.data %>%
     select(Annotation_Accession, Plasmid, replicon_length, protein_count, PlasmidMetabolicGeneRank) %>%
     ungroup()
 
-
 metabolic.gene.plot.data <- metabolic.gene.plasmid.data %>%
     ## add the genome ranking
     left_join(genome.ranking.by.plasmid.metabolic.genes) %>%
@@ -132,10 +129,8 @@ metabolic.genes.plasmid.profile.plot <- metabolic.gene.plot.data %>%
     theme(legend.position="top")
 ggsave("../results/metabolic-plasmid-profile.pdf", metabolic.genes.plasmid.profile.plot)
 
-
 ################################################################################
 ## Supplementary Figure S1: nitrogen-fixing bacteria are enriched with metabolic genes on plasmids.
-## S1Fig: plasmids with lots of metabolic proteins come from Plants and Earth.
 S1FigA <- metabolic.gene.plot.data %>%
     ggplot(aes(x = metabolic_protein_count, fill = Annotation)) +
     geom_histogram(bins=100) +
@@ -144,7 +139,7 @@ S1FigA <- metabolic.gene.plot.data %>%
     scale_fill_discrete(
         drop=FALSE,
         limits = levels(metabolic.gene.plot.data$Annotation)) +
-    xlim(0,500) +
+    coord_cartesian(xlim = c(0, 500)) +
     xlab("") +
     ggtitle("All plasmids with metabolic genes") +
     theme(legend.position="top")
@@ -162,8 +157,7 @@ S1FigB <- metabolic.gene.plot.data %>%
     scale_fill_discrete(
         drop=FALSE,
         limits = levels(metabolic.gene.plot.data$Annotation)) +
-    xlim(0,500) +
-    ylim(0,50) +
+    coord_cartesian(xlim = c(0, 500), ylim = c(0,100)) +
     xlab("") +
     ggtitle("Plasmids with > 100 metabolic genes") +
     guides(fill = "none")
@@ -177,8 +171,7 @@ S1FigC <- metabolic.gene.plot.data %>%
     scale_fill_discrete(
         drop=FALSE,
         limits = levels(metabolic.gene.plot.data$Annotation)) +
-    xlim(0,500) +
-    ylim(0,50) +
+    coord_cartesian(xlim = c(0, 500), ylim = c(0,100)) +
     xlab("Number of metabolic proteins on the plasmid") +
     ggtitle("Plasmids with metabolic genes in nitrogen-fixing bacteria") +
     guides(fill = "none")
@@ -203,12 +196,12 @@ non.N2.fixer.comp.data <- N2.fixer.metabolic.gene.comparison.plot.data %>%
 
 ## compare the means of nitrogen-fixing and non-nitrogen-fixing bacteria.
 mean.N2.fixer.plasmid.metabolic.genes <- mean(N2.fixer.comp.data$total_plasmid_metabolic_proteins, na.rm=TRUE)
-print(mean.N2.fixer.plasmid.metabolic.genes) ## 253.33 plasmid metabolic genes in nitrogen-fixers
+print(mean.N2.fixer.plasmid.metabolic.genes) ## 232.62 plasmid metabolic genes in nitrogen-fixers
 
 mean.non.N2.fixer.plasmid.metabolic.genes <- mean(non.N2.fixer.comp.data$total_plasmid_metabolic_proteins,na.rm=TRUE)
-print(mean.non.N2.fixer.plasmid.metabolic.genes) ## 22.97 plasmid metabolic genes in non-nitrogen fixers
+print(mean.non.N2.fixer.plasmid.metabolic.genes) ## 12.40 plasmid metabolic genes in non-nitrogen fixers
 
-## statistics are super significant: p < 1e-93.
+## statistics are super significant: p < 1e-106.
 wilcox.test(
     x=N2.fixer.comp.data$total_plasmid_metabolic_proteins,
     y=non.N2.fixer.comp.data$total_plasmid_metabolic_proteins,
@@ -260,7 +253,6 @@ pathway.plasmid.count.df <- NifFix.pathway.count.df %>%
     mutate(PlasmidType = ifelse(SymbiosisPlasmid, "Symbiosis plasmids", "all other plasmids")) %>%
     mutate(PlasmidType = factor(PlasmidType, levels=c( "Symbiosis plasmids", "all other plasmids"))) %>%
     rename(Mobility = PredictedMobility)
-
 
 ## Figure 6A is a pie-chart.
 Fig6A.pie.chart.data <- pathway.plasmid.count.df %>%
@@ -402,7 +394,6 @@ Nif.Fix.Nod.plasmid.count.plot.df <- pathway.plasmid.count.df %>%
     ## add the plasmid ranking.
     left_join(Nif.Fix.Nod.plasmid.length.ranking)
 
-
 stacked.pathway.profile.plot <- Nif.Fix.Nod.plasmid.count.plot.df %>%
     ## Just show Nif/Fix and Nod.
     filter(PathwayType != "All Symbiosis Pathways") %>%
@@ -410,7 +401,10 @@ stacked.pathway.profile.plot <- Nif.Fix.Nod.plasmid.count.plot.df %>%
     geom_bar(stat="identity") +
     theme_classic() +
     theme(legend.position="top") +
-    facet_grid(PathwayType~.)
+    facet_grid(PathwayType~.) +
+    labs(fill = "Plasmids ranked by length") +
+    xlab("Genome Rank") +
+    ylab("Pathway Gene Count")
 ggsave("../results/DDOL-pathway-profile.pdf", stacked.pathway.profile.plot, width=8, height = 4)
 
 stacked.pathway.mobility.plot <- Nif.Fix.Nod.plasmid.count.plot.df %>%
@@ -420,7 +414,10 @@ stacked.pathway.mobility.plot <- Nif.Fix.Nod.plasmid.count.plot.df %>%
     geom_bar(stat="identity") +
     theme_classic() +
     theme(legend.position="top") +
-    facet_grid(PathwayType~.)
+    facet_grid(PathwayType~.) +
+    labs(fill = "Plasmid mobility") +
+    xlab("Genome Rank") +
+    ylab("Pathway Gene Count")
 ggsave("../results/DDOL-pathway-mobility.pdf", stacked.pathway.mobility.plot, width=8, height = 4)
 
 S3Fig <- plot_grid(stacked.pathway.profile.plot, stacked.pathway.mobility.plot,ncol=1, labels = c('A', 'B'))

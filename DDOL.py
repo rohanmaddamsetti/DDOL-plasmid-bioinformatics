@@ -162,7 +162,7 @@ def write_pathway_gene_count_dict_to_csv(genome_to_plasmid_pathway_dict, outfile
                 print(f"{genome},{plasmid},{pathwaytype},{pathway_gene_count}", file=outfh)
     return
 
-                
+
 def main():
 
     ## make lists of the plasmids containing genes in each of the three pathways of interest.
