@@ -110,7 +110,10 @@ Then install MOB-SUITE on your local supercomputer (Duke Compute Cluster)
 and run the python wrapper script run-MOB-typer.py using the following 
 sbatch shell script:  
 
-sbatch run-MOB-typer-1.sh
+sbatch run-MOB-typer.sh  
+
+Then, combine all the MOB-typer results into a single CSV file:
+python comb_mob_genome_data.py  
 
 ## Data analysis.
 
@@ -118,4 +121,9 @@ Run the shell script rhizobial-symbiosis-plasmid-protein-grep.sh as follows:
 ./rhizobial-symbiosis-plasmid-protein-grep.sh
 
 Then run the R script "make-DDOL-figures.R" to generate all bioinformatics figures and analyses.  
+
+Hye-in also wrote another script  to
+merge the MOB-typer annotations with the metadata in plasmids_with_N2_symbiosis_metadata.csv:
+
+python  join_candidate_DDOL_mob.py  
 
