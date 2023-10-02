@@ -99,6 +99,8 @@ but this has a disproportionate effect on examining metabolic genes on plasmids.
 
 To generate a table of all KEGG metabolic genes in the plasmids.  
 
+## MOB-Typer plasmid annotation
+
 We use MOB-SUITE to get important plasmid data on mobility: https://github.com/phac-nml/mob-suite  
 To make input files for MOB-typer, do the following:  
 
@@ -114,6 +116,25 @@ sbatch run-MOB-typer.sh
 
 Then, combine all the MOB-typer results into a single CSV file:
 python comb_mob_genome_data.py  
+
+Finally, Hye-in removed duplicated rows in combined_mob_typer_results.txt to generate
+the final file of MOB-typer results, which is called "unique_mob_results.txt", as follows.  
+
+These notes come from Hye-in's notebook:  
+
+Some problem occurred:  
+When I counted the number of lines of “combined_mob_typer_results.txt”, the number of lines was 60914.  
+The number of data files is 41849.  
+I noticed that there were many duplicate items in the “combined_mob_typer_results.txt” file.  
+
+First identified the duplicate items from the file by running:  
+$ sort combined_mob_typer_results.txt| sort | uniq -d > duplicated.txt  
+Then, counted the # of rows from “duplicated.txt”:  
+$ cat duplicated.txt | wc -l  
+There were 19064 items in the “duplicated.txt”.  
+Created a new .txt file that does not contain duplicated items  
+$ sort -u combined_mob_typer_results.txt -o unique_mob_results.txt  
+
 
 ## Data analysis.
 
