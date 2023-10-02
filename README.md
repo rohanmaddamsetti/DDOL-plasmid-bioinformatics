@@ -135,6 +135,7 @@ There were 19064 items in the “duplicated.txt”.
 Created a new .txt file that does not contain duplicated items  
 $ sort -u combined_mob_typer_results.txt -o unique_mob_results.txt  
 
+unique_mob_results.txt is the final file of MOB-typer results used in the Data analysis.  
 
 ## Data analysis.
 
